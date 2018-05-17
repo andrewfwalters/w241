@@ -32,7 +32,7 @@ There are several issues with this, first and foremost that genes are inherited 
 There are two implications of non-independant populations samples: first that genes are difficult to study in isolation and second that non-genetic factors could be shared between participants.
 
 The first implication is more insidious.
-Imagine that a particular sub-population is more likely to poses the gene of interest, due to some common ancestry.
+Imagine that a particular sub-population is more likely to possess the gene of interest, due to some common ancestry.
 This sub-population would likely share other genes, which could predispose them to other conditions affecting their depression.
 This effect could influence the study in either direction.
 The second implication would be easier to control for.
@@ -40,7 +40,7 @@ Demographic information like race and gender is usually easy to capture and cont
 
 ## An Improved Experiment Design
 
-The ideal implementation of the Caspi study would be to make a random selection of newborns, and apply a treatment to half that would force them to poses the gene in question.
+The ideal implementation of the Caspi study would be to make a random selection of newborns, and apply a treatment to half that would force them to possess the gene in question.
 This removes the assumption of independence between samples and would allow for a non-biased study.
 This is clearly an infeasible study and should not be conducted on ethical grounds, which is the dilemma facing all researchers in human genetics.
 The best approximation is to conduct the experiment described above on an animal such as laboratory rats.
