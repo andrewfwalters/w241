@@ -7,22 +7,22 @@
 ## Introduction to Depression Research
 
 Depression is a widespread and poorly understood disease.
-Researchers are aware that there are both biological and psychological factors affecting depression.
+Researchers are aware that there are both biological and psychological factors affecting depression, but both are poorly understood.
 Most medicines treat depression by altering the body's production of chemicals used in the brain such as serotonin and norepinephrine.
 Researchers have yet to establish why antidepressants affect depression and more importantly why they are ineffective in many patients.
 
 ## The Publication of Caspi et al in 2003
 
-the causal relationship between biology and depression is of great interest to researchers.
-Avshalom Caspi along with researchers at Kings College London and the University of Wisconsin observed the effect of a particular gene on the depression outcomes of 1037 children in New Zealand.
+The causal relationship between biology and depression is of great interest to researchers.
+Avshalom Caspi along with researchers at Kings College London and the University of Wisconsin [observed the effect of a particular gene (5-HTT) on the depression outcomes of 1037 children in New Zealand](http://psych.colorado.edu/~willcutt/pdfs/Caspi_2003.pdf).
 
 > In this study, a functional polymorphism in the promoter region of the serotonin transporter gene (SLC6A4) was used to characterize genetic vulnerability to depression and to test whether 5-HTT gene variation moderates the influence of life stress on depression.
 > --Caspi et al
 
 The above excerpt from the introduction of the Caspi paper shows that the researchers intended to draw a causal conclusion from the observational study.
-In particular note the phrase "characterize genetic vulnerability to depression" for it's implied causality.
+In particular, note the phrase "characterize genetic vulnerability to depression" for it's implied causality.
 The limitations of conducting experiments in the field of human genetics is well known to researchers, due to the ethical limitations of imposing a specific gene on a random selection of people.
-However the researchers were not careful enough in describing the limits of their observational study, and the results were reported by The New York Times in this 2003 article as a causal relationship.
+However the researchers were not careful enough in describing the limits of their observational study, and the results were reported by The New York Times in [this 2003 article](https://www.nytimes.com/2003/07/18/us/gene-is-linked-to-susceptibility-to-depression.html) as a causal relationship.
 
 ## Possibility of Bias in the Caspi Paper
 
@@ -49,8 +49,9 @@ While this requires studying a different population, it yields some insights int
 ## The Publication of Risch et al in 2009
 
 A good indicator that their was bias in the Caspi paper comes from a later meta-analysis of gene in question.
-This survey of research in 2009 failed to find any correlation between the gene and depression.
+[This survey of research in 2009](http://psych.colorado.edu/~willcutt/pdfs/Risch_2009.pdf) failed to find any correlation between the gene and depression.
 This paper drew from over 10,000 people studied by various researchers, in comparison to the 1,037 in the original Caspi paper.
+[The New York Times reported on the Risch paper](https://www.nytimes.com/2009/06/17/science/17depress.html) as having refuted the causal relationship from Risch, despite both studies having used the same observational method.
 This would lead us to the conclusion that the results in the Caspi paper were more likely the result of small sample size.
 This is especially significant given that the original participants were sub-divided three times.
 First into those that possessed the gene, then those that experienced depression, then those that experienced significant life trauma prior to their depression.
