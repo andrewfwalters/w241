@@ -1,8 +1,8 @@
 # Essay 1
 
-*Andrew Walters  
-Berkeley W241  
-May 17, 2018*
+*Andrew Walters*  
+*Berkeley W241*  
+*May 17, 2018*
 
 ## Introduction to Depression Research
 
