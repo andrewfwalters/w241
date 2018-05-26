@@ -26,42 +26,32 @@ However the researchers were not careful enough in describing the limits of thei
 
 ## The Possibility of Bias in the Caspi Paper
 
-There are several potential sources of bias in the Caspi paper.
-All of the potential bias comes from the assumption that genes are randomly distributed in the population under study.
-There are several issues with this, first and foremost that genes are inherited and large sub-populations have different likelihoods of inheriting particular genes.
-There are two implications of non-independent populations samples: first that genes are difficult to study in isolation and second that non-genetic factors could be shared between participants.
+All of the potential bias in the Caspi paper comes from the assumption that genes are randomly distributed in the population under study.
+However genetics are far from a random process, the presence of one gene often indicates many others due to their hereditary nature.
+This makes genes exceedingly difficult to study in isolation.
 
-The first implication is more insidious.
 Imagine that a particular sub-population is more likely to possess the gene of interest, due to some common ancestry.
 This sub-population would likely share other genes, which could predispose them to other conditions affecting their depression.
 This could even be in second order effects, such as a combination of genes that makes obesity more likely which in turn makes depression more likely.
-This effect could influence the study in either direction.
-
-The second implication would be a little easier to control for since demographic information like race and gender is usually easy to capture.
-The researchers certainly controlled for things like differences among demographic groups, but characterizing the effects of complex features like race and gender are very difficult.
-The paper concludes that the gene of interest, when coupled with a certain amount of traumatic life events, makes depression more likely.
-But it is possible that a demographic group experience traumatic events differently.
-For example, consider the effect of a miscarriage on a husband and wife.
-While both experience emotional trauma, the woman carrying the child would also be affected by the physical aspect.
-This example isn't perfect, but it illustrates that quantifying an exact amount of trauma with non-independent groups is challenging.
+That example would influence the study to overestimate the significance of the the treatment, but in general the effect could influence the study in either direction.
 
 ## An Improved Experiment Design
 
 The ideal implementation of the Caspi study would be to make a random selection of newborns, and apply a treatment to half that would force them to possess the gene in question.
 This removes the assumption of independence between samples and would allow for a non-biased study.
 This is clearly an infeasible study and should not be conducted on ethical grounds, which is the dilemma facing all researchers in human genetics.
-The best approximation is to conduct the experiment described above on an animal such as laboratory rats.
-While this requires studying a different population, it yields some insights into the biological processes at play in the nervous systems of mammals.
+The best approximation is to conduct the experiment described above on an animal such as laboratory rats (assuming that depression could be accurately detected in non-human subjects).
+A rat experiment could at least yield some insights into the biological processes at play in the nervous systems of mammals.
 
 ## The Publication of Risch et al in 2009
 
 A good indicator that their was bias in the Caspi paper comes from a later meta-analysis of gene in question.
 [This survey of research in 2009](http://psych.colorado.edu/~willcutt/pdfs/Risch_2009.pdf) failed to find any correlation between the gene and depression.
 This paper drew from over 10,000 people studied by various researchers, in comparison to the 1,037 in the original Caspi paper.
-[The New York Times reported on the Risch paper](https://www.nytimes.com/2009/06/17/science/17depress.html) as having refuted the causal relationship from Risch, despite both studies having used the same observational method.
+[The New York Times reported on the Risch paper](https://www.nytimes.com/2009/06/17/science/17depress.html) as having refuted the causal relationship from Caspi, despite both studies having used the same observational method.
 
 A possible conclusion is that the results in the Caspi paper were more likely the result of small sample size.
 This is especially significant given that the original participants were sub-divided three times.
 First into those that possessed the gene, then those that experienced depression, then those that experienced significant life trauma prior to their depression.
 While the researchers don't give exact numbers in their publication, a ballpark estimate might be that one eighth of those studied were actually in the treatment group.
-Determining a causal relationship with such a small sample in an observational study is a near impossibility, and therefore the Caspi paper should done more to temper their conclusions.
+Determining a causal relationship with such a small sample in an observational study is a near impossibility, and therefore the Caspi paper should have done more to temper their conclusions.
