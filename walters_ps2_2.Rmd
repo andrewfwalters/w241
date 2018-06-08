@@ -1,0 +1,479 @@
+---
+title: "Problem Set #2"
+author: "Andrew Walters"
+date: \today
+header-includes:
+    \usepackage{amsmath}
+    \usepackage{xcolor}
+    \usepackage{framed}
+    \newcommand{\var}{\mathrm{var}}
+    \colorlet{shadecolor}{lightgray}
+output: pdf_document
+---
+
+<!--
+
+Some guidelines for submitting problem sets in this course:
+
+- Please submit a PDF document rather than a Word document or a Google document.
+- Please put your name at the top of your problem set.
+- Please **bold** or *highlight* your numerical answers to make them easier to find.
+- If you'll be using `R` or `Python` code to calculate your answers, please put the code and its output directly into your Problem Set PDF document.
+- It is highly recommended, although not required, that you use the RMarkdown feature in RStudio to compose your problem set answers. RMarkdown allows you to easily intermingle analysis code and answers in one document. It is of a similar design as `jupyter` and an ipython notebook.
+- You do not need to show work for trivial calculations, but showing work is always allowed.
+- For answers that involve a narrative response, please feel free to describe the key concept directly and briefly, if you can do so, and do not feel pressure to go on at length.
+- Please ask us questions about the problem set if you get stuck. **Don’t spend more than 20 minutes puzzling over what a problem means.** 
+- Please ensure that someone (us!) can compile your solution set. The best way is to use the web-hosted links we've provided. 
+--> 
+
+# 1. What happens when pilgrims attend the Hajj pilgrimage to Mecca? 
+
+On the one hand, participating in a common task with a diverse group of pilgrims might lead to increased mutual regard through processes identified in *Contact Theories*. On the other hand, media narritives have raised the spectre that this might be accompanied by "antipathy toward non-Muslims". [Clingingsmith, Khwaja and Kremer (2009)](https://dash.harvard.edu/handle/1/3659699) investigates the question. 
+
+Using the data here, test the sharp null hypothesis that winning the visa lottery for the pilgrimage to Mecca had no effect on the views of Pakistani Muslims toward people from other countries. Assume that the Pakistani authorities assigned visas using complete random assignment. Use, as your primary outcome the `views` variable, and as your treatment feature `success`. If you're ambitious, write your fucntion generally so that you can also evaluate feeligns toward specific nationalities.
+
+```{r, echo = FALSE}
+p1.d <- read.csv("./experiments-causality/assignments/PS2-upstream/data/Clingingsmith.2009.csv")
+```
+
+\begin{shaded}
+a. Using either `dplyr` or `data.table`, group the data by `success` and report whether views toward others are generally more positive among lottery winners or lottery non-winners. 
+\end{shaded}
+
+lottery winners (success == 1) have more favorable views (2.3 on average) than non-lottery winners (1.9 on average).
+
+\colorlet{shadecolor}{cyan}
+```{r}
+p1.dt <- data.table::data.table(p1.d)
+result <- p1.dt[,mean(views),by=success]
+real.treatment.effect <- (as.numeric(result[2,2]-result[1,2]))
+print(sprintf("Mean views of unccussessful visa applicants: %.2f and successful applicants: %.2f", as.numeric(result[1,2]), as.numeric(result[2,2])))
+print(sprintf("Experimental treatment effect: %.2f", real.treatment.effect))
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+b. But is this a meaningful difference, or could it just be randomization noise? Conduct 10,000 simulated random assignments under the sharp null hypothesis to find out. (Don't just copy the code from the async, think about how to write this yourself.) 
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+ri.binary <- function(dataTable,treatment,outcome) {
+  rand.treatment <- rbinom(length(dataTable[,success]), 1, 0.5)
+  experiment <- data.table::data.table(views=p1.dt[,views],success=rand.treatment)
+  result <- experiment[,mean(views),by=success]
+  ate <- (as.numeric(result[2,2]-result[1,2]))
+  return (ate)
+}
+num_trials <- 10000
+p1.sharp.null.dist <- replicate(num_trials,ri.binary(p1.dt,"success","views"))
+hist(p1.sharp.null.dist,main = "Histogram of Randomization Inference ATEs",breaks = seq(-0.75,0.75,0.1))
+abline(v = real.treatment.effect, col = "blue")
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+c. How many of the simulated random assignments generate an estimated ATE that is at least as large as the actual estimate of the ATE? 
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+print(sprintf("Number of simulated ATEs as large as the ATE found experimentally: %.2f", sum(p1.sharp.null.dist>=real.treatment.effect)))
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+d. What is the implied *one-tailed* p-value? 
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+print(sprintf("The one-tailed P-value for this experiment is: %.4f", mean(p1.sharp.null.dist>=real.treatment.effect)))
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+e. How many of the simulated random assignments generate an estimated ATE that is at least as large *in absolute value* as the actual estimate of the ATE? 
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+print(sprintf("Number of simulated ATEs as large as the ATE found experimentally in absolute value: %.2f", sum(abs(p1.sharp.null.dist)>=abs(real.treatment.effect))))
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+f. What is the implied two-tailed p-value? 
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+print(sprintf("The two-tailed P-value for this experiment is: %.4f", mean(abs(p1.sharp.null.dist)>=abs(real.treatment.effect))))
+```
+\colorlet{shadecolor}{lightgray}
+
+# 2. Term Limits Aren't Good. 
+
+Naturally occurring experiments sometimes involve what is, in effect, block random assignment. For example, [Rocio Titiunik](https://sites.google.com/a/umich.edu/titiunik/publications) , in [this paper](http://www-personal.umich.edu/~titiunik/papers/Titiunik2016-PSRM.pdf) studies the effect of lotteries that determine whether state senators in TX and AR serve two-year or four-year terms in the aftermath of decennial redistricting. These lotteries are conducted within each state, and so there are effectively two distinct experiments on the effects of term length.
+
+The "thoery" in the news (such as it is), is that legislators who serve 4 year terms have more time to slack off and not produce legislation. If this were true, then it would stand to reason that making terms shorter would increase legislative production. 
+
+One way to measure legislative production is to count the number of bills (legislative proposals) that each senator introduces during a legislative session. The table below lists the number of bills introduced by senators in both states during 2003. 
+
+```{r}
+library(foreign)
+
+p2.d <- read.dta("./experiments-causality/assignments/PS2-upstream/data/Titiunik.2010.dta")
+head(p2.d,n = 10)
+```
+
+\begin{shaded}
+a. Using either `dplyr` or `data.table`, group the data by state and report the mean number of bills introduced in each state. Does Texas or Arkansas seem to be more productive? Then, group by two- or four-year terms (ignoring states). Do two- or four-year terms seem to be more productive? **Which of these effects is causal, and which is not?** Finally, using `dplyr` or `data.table` to group by state and term-length. How, if at all, does this change what you learn? 
+\end{shaded}
+
+From all of these results, we see that uniformily texas produced more bills than Oklahoma and that 4-year congresspeople regardless of state produced more bills per term than 2-year congresspeople. 
+
+\colorlet{shadecolor}{cyan}
+```{r}
+# group by state
+p2.dt <- data.table::data.table(p2.d)
+result <- p2.dt[,mean(bills_introduced),by=texas0_arkansas1]
+print(sprintf("Mean bills per congressperson introduced in Texas: %.2f and Arkansas: %.2f", as.numeric(result[1,2]), as.numeric(result[2,2])))
+print(sprintf("Texas produced %.2f more bills in this term per congressperson.", (as.numeric(result[1,2]-result[2,2]))))
+# group by term length
+result <- p2.dt[,mean(bills_introduced),by=term2year]
+print(sprintf("Mean bills of 4-year congresspeople: %.2f and 2-year congresspeople: %.2f", as.numeric(result[1,2]), as.numeric(result[2,2])))
+print(sprintf("4-Year congresspeople produced %.2f more bills on average in this term.", as.numeric(result[1,2]-result[2,2])))
+# group by both state and term length
+p2.result <- p2.dt[,mean(bills_introduced),by=c("term2year","texas0_arkansas1")]
+print(p2.result)
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+b. For each state, estimate the standard error of the estimated ATE. 
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+tx.ate <- (as.numeric(p2.result[1,3]-p2.result[2,3]))
+ar.ate <- (as.numeric(p2.result[3,3]-p2.result[4,3]))
+print(sprintf("The ATE for Texas is : %.2f and for Arkansas: %.2f",tx.ate,ar.ate))
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+c. Use equation (3.10) to estimate the overall ATE for both states combined. 
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+ar.obs <- sum(p2.dt[,"texas0_arkansas1"])
+overall.obs <- as.numeric(lengths(p2.dt[,"texas0_arkansas1"]))
+tx.obs <- overall.obs - ar.obs
+p2.overall.ate <- tx.ate * (tx.obs/overall.obs) + ar.ate * (ar.obs/overall.obs)
+print(sprintf("The overall treatment effect for a 4-year term compared to a 2-year term is: %.2f",p2.overall.ate))
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+d. Explain why, in this study, simply pooling the data for the two states and comparing the average number of bills introduced by two-year senators to the average number of bills introduced by four-year senators leads to biased estimate of the overall ATE. 
+\end{shaded}
+
+In this experiment, the state acts as a confounding variable. Texas is a much larger and more populous state than Arkansas, so it is logical that they would produce more legistation regardless of the term length treatment. Using blocking is a logical way to eliminate bias that might arise if the treatment was distributed unevenly between states.
+
+\begin{shaded}
+e. Insert the estimated standard errors into equation (3.12) to estimate the standard error for the overall ATE. 
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+tx.twoyear <- p2.dt[term2year==1 & texas0_arkansas1==0]
+tx.fouryear <- p2.dt[term2year==0 & texas0_arkansas1==0]
+tx.twoyear.obs <- as.numeric(tx.twoyear[,sum(term2year)])
+tx.se <- ((var(tx.twoyear[,bills_introduced])/tx.twoyear.obs)+(var(tx.fouryear[,bills_introduced])/(tx.obs-tx.twoyear.obs)))^0.5
+
+ar.twoyear <- p2.dt[term2year==1 & texas0_arkansas1==1]
+ar.fouryear <- p2.dt[term2year==0 & texas0_arkansas1==1]
+ar.twoyear.obs <- as.numeric(ar.twoyear[,sum(term2year)])
+ar.se <- ((var(ar.twoyear[,bills_introduced])/ar.twoyear.obs)+(var(ar.fouryear[,bills_introduced])/(ar.obs-ar.twoyear.obs)))^0.5
+
+overall.se <- ( tx.se^2 * (tx.obs/overall.obs)^2 + ar.se^2 * (ar.obs/overall.obs)^2 )^0.5
+print(sprintf("The overall standard error for the experiment is: %.2f", overall.se))
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+f. Use randomization inference to test the sharp null hypothesis that the treatment effect is zero for senators in both states.  
+g. **IN Addition:** Plot histograms for both the treatment and control groups in each state (for 4 histograms in total).
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+ri.blocking <- function(block1,block2) {
+  b1.n <- nrow(block1)
+  b1.sample <- sample(b1.n,b1.n/2)
+  b1.t1 <- block1[b1.sample,mean(bills_introduced)]
+  b1.t2 <- block1[!b1.sample,mean(bills_introduced)]
+  
+  b2.n <- nrow(block2)
+  b2.sample <- sample(b2.n,b2.n/2)
+  b2.t1 <- block2[b2.sample,mean(bills_introduced)]
+  b2.t2 <- block2[!b2.sample,mean(bills_introduced)]
+  
+  overall.n <- b1.n + b2.n
+  b1.ate <- b1.t2 - b1.t1
+  b2.ate <- b2.t2 - b2.t1
+  overall.ate <- b1.ate * (b1.n/overall.n) + b2.ate * (b2.n/overall.n)
+  return (list("b1.t1" = b1.t1, "b1.t2" = b1.t2, "b2.t1" = b2.t1, "b2.t2" = b2.t2, "overall.ate" = overall.ate))
+}
+
+num_trials <- 1000
+tx.block <- p2.dt[texas0_arkansas1==0]
+ar.block <- p2.dt[texas0_arkansas1==1]
+p2.sharp.null.dist <- replicate(num_trials,ri.blocking(block1 = tx.block, block2 = ar.block))
+p2.sharp.null.dist <- data.table::data.table(t(p2.sharp.null.dist))
+hist(as.numeric(p2.sharp.null.dist[,overall.ate]),main = "Histogram of Randomization Inference ATEs",breaks = seq(-22.5,22.5,5))
+abline(v = p2.overall.ate, col = "blue")
+hist(as.numeric(tx.twoyear[,bills_introduced]),main = "Histogram of Texas Bills by Two-Year Congresspeople")
+hist(as.numeric(tx.fouryear[,bills_introduced]),main = "Histogram of Texas Bills by Four-Year Congresspeople")
+hist(as.numeric(ar.twoyear[,bills_introduced]),main = "Histogram of Arkansas Bills by Two-Year Congresspeople")
+hist(as.numeric(ar.fouryear[,bills_introduced]),main = "Histogram of Arkansas Bills by Four-Year Congresspeople")
+``` 
+\colorlet{shadecolor}{lightgray}
+
+# 3. Cluster Randomization
+Use the data in *Field Experiments* Table 3.3 to simulate cluster randomized assignment. (*Notes: (a) Assume 3 clusters in treatment and 4 in control; and (b) When Gerber and Green say ``simulate'', they do not mean ``run simulations with R code'', but rather, in a casual sense ``take a look at what happens if you do this this way.'' There is no randomization inference necessary to complete this problem.*)
+
+
+```{r}
+## load data 
+p3.d <- read.csv("./experiments-causality/assignments/PS2-upstream/data/ggChapter3.csv")
+head(p3.d,n=5)
+p3.dt <- data.table::data.table(p3.d)
+```
+
+\begin{shaded}
+a. Suppose the clusters are formed by grouping observations {1,2}, {3,4}, {5,6}, ... , {13,14}. Use equation (3.22) to calculate the standard error assuming half of the clusters are randomly assigned to treatment. 
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r} 
+p3.clusters <- list(1,1,2,2,3,3,4,4,5,5,6,6,7,7)
+p3.sample <- sample(unique(p3.clusters),length(unique(p3.clusters))/2)
+p3.treatment <- is.element(p3.clusters, p3.sample)
+p3.k <- as.numeric(length(unique(p3.clusters)))
+p3.N <- as.numeric(length(p3.clusters))
+p3.m <- as.numeric(sum(p3.treatment))
+p3.dt.a <- cbind(p3.dt,data.table::data.table("cluster"=p3.clusters,"treatment"=p3.treatment))
+p3.outcomes.treatment <- p3.dt.a[p3.treatment,c("Y","cluster")]
+p3.outcomes.treatment.means <- tapply(p3.outcomes.treatment$Y, as.numeric(p3.outcomes.treatment$cluster), mean)
+p3.outcomes.control <- p3.dt.a[p3.treatment,c("Y","cluster")]
+p3.outcomes.control.means <- tapply(p3.outcomes.control$Y, as.numeric(p3.outcomes.control$cluster), mean)
+p3.se.a <- ( ( 1/(p3.k-1) ) * ( ( p3.m*var(p3.outcomes.control.means) / (p3.N-p3.m) ) + ( ( (p3.N-p3.m)*var(p3.outcomes.treatment.means) / p3.m ) ) + ( 2*cov(p3.outcomes.control.means,p3.outcomes.treatment.means) ) ) )^0.5
+print(sprintf("The standard error for the clustering described in part a is: %.2f",p3.se.a))
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+b. Suppose that clusters are instead formed by grouping observations {1,14}, {2,13}, {3,12}, ... , {7,8}. Use equation (3.22) to calculate the standard error assuming half of the clusters are randomly assigned to treatment. 
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r} 
+p3.clusters <- list(1,2,3,4,5,6,7,7,6,5,4,3,2,1)
+p3.sample <- sample(unique(p3.clusters),length(unique(p3.clusters))/2)
+p3.treatment <- is.element(p3.clusters, p3.sample)
+p3.k <- as.numeric(length(unique(p3.clusters)))
+p3.N <- as.numeric(length(p3.clusters))
+p3.m <- as.numeric(sum(p3.treatment))
+p3.dt.b <- cbind(p3.dt,data.table::data.table("cluster"=p3.clusters,"treatment"=p3.treatment))
+p3.outcomes.treatment <- p3.dt.b[p3.treatment,c("Y","cluster")]
+p3.outcomes.treatment.means <- tapply(p3.outcomes.treatment$Y, as.numeric(p3.outcomes.treatment$cluster), mean)
+p3.outcomes.control <- p3.dt.b[p3.treatment,c("Y","cluster")]
+p3.outcomes.control.means <- tapply(p3.outcomes.control$Y, as.numeric(p3.outcomes.control$cluster), mean)
+p3.se.b <- ( ( 1/(p3.k-1) ) * ( ( p3.m*var(p3.outcomes.control.means) / (p3.N-p3.m) ) + ( ( (p3.N-p3.m)*var(p3.outcomes.treatment.means) / p3.m ) ) + ( 2*cov(p3.outcomes.control.means,p3.outcomes.treatment.means) ) ) )^0.5
+print(sprintf("The standard error for the clustering described in part b is: %.2f",p3.se.b))
+``` 
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+c. Why do the two methods of forming clusters lead to different standard errors? What are the implications for the design of cluster randomized experiments? 
+\end{shaded}
+
+The difference in standard error is due the outcome variable Y, which roughly increases linearly with the index. In grouping opposite indexes together, the difference between $\bar{Y}_j(0)$ and $\bar{Y}_j(1)$ is minimized.
+
+# 4. Sell Phones? 
+You are an employee of a newspaper and are planning an experiment to demonstrate to Apple that online advertising on your website causes people to buy iPhones. Each site visitor shown the ad campaign is exposed to $0.10 worth of advertising for iPhones. (Assume all users could see ads.) There are 1,000,000 users available to be shown ads on your newspaper’s website during the one week campaign. 
+
+Apple indicates that they make a profit of $100 every time an iPhone sells and that 0.5% of visitors to your newspaper’s website buy an iPhone in a given week in general, in the absence of any advertising.
+
+\begin{shaded}
+a. By how much does the ad campaign need to increase the probability of purchase in order to be “worth it” and a positive ROI (supposing there are no long-run effects and all the effects are measured within that week)?
+\end{shaded}
+
+Break even point:
+add spending <= revenue gain
+p4.n_users \* p4.add_spend <= p4.n_users \* (p4.conversion.final - p4.conversion.initial) * p4.profit_margin
+
+\colorlet{shadecolor}{cyan}
+```{r}
+p4.n_users <- 1000000
+p4.conversion.initial <- 0.5
+p4.profit_margin <- 100
+p4.add_spend <- 0.10
+p4.conversion.final <- (p4.n_users * p4.add_spend) / (p4.n_users * p4.profit_margin) + p4.conversion.initial
+print(sprintf("Apple would need the rate at which users purchase iPhones to increase from %.4f to %.4f in order to break even",p4.conversion.initial,p4.conversion.final))
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+b. Assume the measured effect is 0.2 percentage points. If users are split 50:50 between the treatment group (exposed to iPhone ads) and control group (exposed to unrelated advertising or nothing; something you can assume has no effect), what will be the confidence interval of your estimate on whether people purchase the phone?
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+p4.conversion.b <- p4.conversion.initial + 0.2
+p4.n_control.b <- p4.n_users*0.5
+p4.n_treatment.b <- p4.n_users*0.5
+p4.p.b <- ( p4.conversion.initial*p4.n_control.b + p4.conversion.b*p4.n_treatment.b ) / (p4.n_control.b + p4.n_treatment.b)
+p4.se.b <- ( p4.p.b*(1-p4.p.b) * ( (1/p4.n_control.b) + (1/p4.n_treatment.b) ) )^0.5
+print(sprintf("The standard error for the experiment described in part b is : %.6f", p4.se.b))
+print(sprintf("The 95 percent confidence interval for the experiment described in part b is : %.6f to %.6f", p4.conversion.b-1.96*p4.se.b, p4.conversion.b+1.96*p4.se.b))
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+  + **Note:** The standard error for a two-sample proportion test is $\sqrt{p(1-p)*(\frac{1}{n_{1}}+\frac{1}{n_{2}})}$ where $p=\frac{x_{1}+x_{2}}{n_{1}+n_{2}}$, where $x$ and $n$ refer to the number of “successes” (here, purchases) over the number of “trials” (here, site visits). The length of each tail of a 95% confidence interval is calculated by multiplying the standard error by 1.96.
+\end{shaded}
+  
+\begin{shaded}
+c. Is this confidence interval precise enough that you would recommend running this experiment? Why or why not?
+\end{shaded}
+
+The lower bound of the confidence interval is well above the break-even point for this advertising campaign, and the interval is very narrow which indicates a high degree of confidence in the projection. It is very very unlikely that this advertising campaign would lose the company money, so I would strongly reccomend that we follow through on it.
+
+\begin{shaded}
+d. Your boss at the newspaper, worried about potential loss of revenue, says he is not willing to hold back a control group any larger than 1% of users. What would be the width of the confidence interval for this experiment if only 1% of users were placed in the control group?
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+p4.conversion.d <- p4.conversion.initial + 0.2
+p4.n_control.d <- p4.n_users*0.01
+p4.n_treatment.d <- p4.n_users*0.99
+p4.p.d <- ( p4.conversion.initial*p4.n_control.d + p4.conversion.d*p4.n_treatment.d ) / (p4.n_control.d + p4.n_treatment.d)
+p4.se.d <- ( p4.p.d*(1-p4.p.d) * ( (1/p4.n_control.d) + (1/p4.n_treatment.d) ) )^0.5
+print(sprintf("The standard error for the experiment described in part b is : %.6f", p4.se.d))
+print(sprintf("The 95 percent confidence interval for the experiment described in part b is : %.6f to %.6f", p4.conversion.d-1.96*p4.se.d, p4.conversion.d+1.96*p4.se.d))
+```
+\colorlet{shadecolor}{lightgray}
+
+# 5. Sports Cards
+Here you will find a set of data from an auction experiment by John List and David Lucking-Reiley ([2000](https://drive.google.com/file/d/0BxwM1dZBYvxBNThsWmFsY1AyNEE/view?usp=sharing)).  
+
+```{r}
+p5.d2 <- read.csv("./experiments-causality/assignments/PS2-upstream/data/listData.csv")
+head(p5.d2)
+```
+
+In this experiment, the experimenters invited consumers at a sports card trading show to bid against one other bidder for a pair trading cards.  We abstract from the multi-unit-auction details here, and simply state that the treatment auction format was theoretically predicted to produce lower bids than the control auction format.  We provide you a relevant subset of data from the experiment.
+
+\begin{shaded}
+a. Compute a 95% confidence interval for the difference between the treatment mean and the control mean, using analytic formulas for a two-sample t-test from your earlier statistics course. 
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+t.test(p5.d2$bid[p5.d2$uniform_price_auction==0],p5.d2$bid[p5.d2$uniform_price_auction==1])
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+b. In plain language, what does this confidence interval mean?
+\end{shaded}
+
+We can reject the null hypothesis with greater than 99% confidence. Additionally we see that the 95% confidence interval is that uniform price auction increases bids between 3.5 and 20.9 dollars. While this is a useful result, the large confidence interval suggests that we should conduct a larger experiment to determine the effect of uniform price auctions more precisely.
+
+\begin{shaded}
+c. Regression on a binary treatment variable turns out to give one the same answer as the standard analytic formula you just used.  Demonstrate this by regressing the bid on a binary variable equal to 0 for the control auction and 1 for the treatment auction.
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+p5.model <- lm(formula = bid ~ uniform_price_auction, data = p5.d2)
+summary(p5.model)
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+d. Calculate the 95% confidence interval you get from the regression.
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+confint(p5.model, "uniform_price_auction", level=0.95)
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+e. On to p-values. What p-value does the regression report? Note: please use two-tailed tests for the entire problem.
+\end{shaded}
+
+The linear regression reported the a p-value within one ten-thousandnth of the t-test: 0.006315
+
+\colorlet{shadecolor}{cyan}
+```{r}
+print(sprintf("The p-value for the linear regression model is: %.6f",as.numeric(summary(p5.model)$coefficients[,4][2])))
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+f. Now compute the same p-value using randomization inference.
+\end{shaded}
+
+\colorlet{shadecolor}{cyan}
+```{r}
+p5.ri <- function(data,outcome) {
+  n <- nrow(data)
+  s <- sample(n,n/2)
+  ind <- logical(n)
+  ind[s] <- TRUE
+  treatment <- data[ind,outcome]
+  control <- data[!ind,outcome]
+  ate <- as.numeric(mean(treatment)-mean(control))
+  return (ate)
+}
+
+p5.real.ate <- as.numeric(mean(p5.d2[p5.d2$uniform_price_auction==1,"bid"])-mean(p5.d2[p5.d2$uniform_price_auction==0,"bid"]))
+num_trials <- 1000 #change to 10,000 before final knit
+p5.sharp.null.dist <- replicate(num_trials, p5.ri(data = p5.d2, outcome = "bid"))
+hist(p5.sharp.null.dist, main = "Histogram of Randomization Inference ATEs",breaks = seq(-22.5,22.5,5))
+abline(v = p5.real.ate, col = "blue")
+
+print(sprintf("The two-tailed P-value for this experiment is: %.4f", mean(abs(p5.sharp.null.dist)>=abs(p5.real.ate))))
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+g. Compute the same p-value again using analytic formulas for a two-sample t-test from your earlier statistics course. (Also see part (a).)
+\end{shaded}
+
+Not sure why my t-statistic calculation doesn't match up with the value produced by the t-test, but I ran out of time to troubleshoot it.
+
+\colorlet{shadecolor}{cyan}
+```{r}
+p5.t <- (mean(p5.d2$bid) - abs(p5.real.ate))/ (sd(p5.d2$bid) / sqrt(nrow(p5.d2)))
+p5.manual_p <- 2 * pt(p5.t, nrow(p5.d2)-1, lower.tail = FALSE)
+p5.t.from_t_test <- 2.8211
+p5.semi_manual_p <- 2 * pt(p5.t.from_t_test, df = nrow(p5.d2)-1, lower.tail = FALSE)
+print(sprintf("The manually computed p-value is: %.6f",p5.manual_p))
+print(sprintf("The manually computed p-value borrowing the t-value from the t-test is: %.6f",p5.semi_manual_p))
+```
+\colorlet{shadecolor}{lightgray}
+
+\begin{shaded}
+h. Compare the two p-values in parts (e) and (f). Are they much different? Why or why not? How might your answer to this question change if the sample size were different?
+\end{shaded}
+
+The p-value produced by randomization inference is about 30% larger than the p-value computed analytically. By design, the randomization inference is more sensitive to outliers or otherwise non-symetcial data. A larger sample size would improve the accuraccy of the analytical p-value by the cental limit theorem.
