@@ -1,4 +1,4 @@
-compared# Essay 2
+# Essay 2
 
 *Andrew Walters*  
 *Berkeley W241*  
