@@ -37,10 +37,12 @@ library(multiwayvcov)
 library(stargazer)
 ```
 
-\begin{shaded}
 
- 0 Write Functions 
+
+# 0 Write Functions 
 You're going to be doing a few things a *number* of times -- calculating robust standard errors, calculating clustered standard errors, and then calculating the confidence intervals that are built off these standard errors. 
+
+\begin{shaded}
 
 *After* you've worked through a few of these questions, I suspect you will see places to write a function that will do this work for you. Include those functions here, if you write them. 
 
@@ -52,12 +54,8 @@ You're going to be doing a few things a *number* of times -- calculating robust 
 ```
 \colorlet{shadecolor}{lightgray}
 
-\begin{shaded}
-
- 1 Replicate Results 
+# 1 Replicate Results 
 Skim [Broockman and Green's](http://link.springer.com/article/10.1007/s11109-013-9239-z) paper on the effects of Facebook ads and download an anonymized version of the data for Facebook users only.
-
-\end{shaded}
 
 \colorlet{shadecolor}{code}
 ```{r}
@@ -174,8 +172,8 @@ for(ii in 1:length(lm$coefficients)){
     lm$coefficients[ii]+lm$robust_se[ii]*1.96
     ))
 }
-print(sprintf("The ATE of treatemnt x is %.3f",lm$coefficients[2]))
-print(sprintf("The p-value is %.3f",summary(lm)$coefficients[2,4]))
+print(sprintf("The ATE of treatemnt %s is %.3f",names(lm$coefficients[2]),lm$coefficients[2]))
+print(sprintf("The p-value is %.18f",summary(lm)$coefficients[2,4]))
 ```
 
 ```{r, results='asis'}
@@ -203,7 +201,7 @@ for(ii in 1:length(lm$coefficients)){
     lm$coefficients[ii]+lm$robust_se[ii]*1.96
     ))
 }
-print(sprintf("The ATE of treatemnt x is %.3f",lm$coefficients[2]))
+print(sprintf("The ATE of treatemnt %s is %.3f",names(lm$coefficients[2]),lm$coefficients[2]))
 print(sprintf("The p-value is %.3f",summary(lm)$coefficients[2,4]))
 ```
 
@@ -215,6 +213,13 @@ stargazer(lm,se=list(lm$robust_se), header=F)
 g. Why did the results from parts (e) and (f) differ? Which result is biased, and why? (Hint: see pages 75-76 of Gerber and Green, with more detailed discussion optionally available on pages 116-121.)
 
 \end{shaded}
+
+```{r}
+print(sprintf("Treatment Rate in Study 1: %.3f",(length(study1_1a$treat_ad[study1_1a$treat_ad==1])/length(study1_1a$treat_ad))))
+print(sprintf("Treatment Rate in Study 2: %.3f",(length(study2_1d$treat_ad[study2_1d$treat_ad==1])/length(study2_1d$treat_ad))))
+```
+
+The result in part E is biased because it fails to account for the varying treatment rate between the two studies. Result F accounts for the blocking by including the dummy variable for block as a covariate.
 
 \begin{shaded}
 
@@ -300,6 +305,8 @@ h. If we were to remove the "has cell phone" variable from the regression, what 
 
 \end{shaded}
 
+By removing the covariate "has cell phone" from the regression, we are adding the variance that the covaraite explained back into the error term. Since "any sms message" is a treatment that is only applied if the subject has a cell phone, a portion of this variance would likely be absorbed by that treatment effect. This would increase the ATE of "any sms message".
+
 \pagebreak
 
 # 3 Multifactor Experiments 
@@ -338,7 +345,6 @@ c. In column (1) of Table 4B, interpret the magnitude of the coefficient on "bin
 
 The coefficient for "bin without sticker" is 0.035. The positive sign indicates that the "bin without sticker" treatment produced an increase in the percentage of visits at which a subject turned in  a bag of recyclables. The magnitude of 0.035 shows that the treatment group only turned in a bag per person at a rate of 0.035 greater than the control group. While small, this increase is enough to be statistically significant.
 
-
 \begin{shaded}
 
 d. In column (1) of Table 4B, which seems to have a stronger treatment effect, the recycling bin with message sticker, or the recycling bin without sticker?  How large is the magnitude of the estimated difference?
@@ -360,6 +366,8 @@ No it is not significant at the 95% level. 0.020 is less than 1.96*0.015, where 
 f. Notice that Table 4C is described as results from "fully saturated" models.  What does this mean?  Looking at the list of variables in the table, explain in what sense the model is "saturated."
 
 \end{shaded}
+
+A fully saturated model has as many covaraites as there are subjects in the experiment. That is usually troublesome becuase we would have an over-fitted model. In this case we can see that there are on the order of 10 covaraites and the experiment was conducted with around 2,000 subjects. This model is saturated in that all of the covariates in the dataset were used to fit a regression.
 
 \pagebreak
 
@@ -443,6 +451,8 @@ for(ii in 2:length(lm$coefficients)){
 stargazer(lm,se=list(lm$robust_se), header=F)
 ```
 
+Some of the variance explained by the treatment effect in teh part A regression was actually due to selecting people who recycle more in general. This is shown by the covariate for the baseline recycling, which measure the number of bins they turned in before the treatment was applied. Accounting for this impact reduced the effect size of the treatment.
+
 \begin{shaded}
 
 c. Now add the street fixed effects.  (You'll need to use the R command factor().) Provide a 95% confidence interval for the treatment effect.  
@@ -473,15 +483,16 @@ d. Recall that the authors described their experiment as "stratified at the stre
 
 \end{shaded}
 
+Since the rate at which the treatment was applied is mostly constant accross each block, there is very little impact on the ATE resulting from blocking.
+
 \begin{shaded}
 
 e. Perhaps having a cell phone helps explain the level of recycling behavior. Instead of "has cell phone," we find it easier to interpret the coefficient if we define the variable " no cell phone."  Give the R command to define this new variable, which equals one minus the "has cell phone" variable in the authors' data set.  Use "no cell phone" instead of "has cell phone" in subsequent regressions with this dataset.
 
 \end{shaded}
 
-```{r, results='asis'}
+```{r}
 d$no_cell_phone <- 1-d$havecell
-d$havecell <- NULL
 head(d)
 ```
 
@@ -508,6 +519,8 @@ for(ii in list(2)){
 stargazer(lm,se=list(lm$robust_se), header=F)
 ```
 
+Since the effect of receiving an SMS message is neglidgable, the effect of having a cell phone is also very small. Therefore very little of the variance explained by the treatment effect. Most likely "no cell phone" is measuring something closer to "is lower class" and shows a slight downward effect.
+
 \begin{shaded}
 
 g. Now let's add in the SMS treatment.  Re-run the previous regression with "any SMS" included.  You should get the same results as in Table 4A.  Provide a 95% confidence interval for the treatment effect of the recycling bin.  Explain why this confidence interval does not differ much from the previous one.
@@ -531,6 +544,8 @@ for(ii in list(2,3)){
 stargazer(lm,se=list(lm$robust_se), header=F)
 ```
 
+The treatment of sending an SMS message was not very effective, and therefore accounting for that treatment effect had very little impact on the regression output.
+
 \begin{shaded}
 
 h. Now reproduce the results of column 2 in Table 4B, estimating separate treatment effects for the two types of SMS treatments and the two types of recycling-bin treatments.  Provide a 95% confidence interval for the effect of the unadorned recycling bin.  Explain how your answer differs from that in part (g), and explain why you think it differs.
@@ -553,6 +568,8 @@ for(ii in list(2,3,4,5)){
 ```{r, results='asis'}
 stargazer(lm,se=list(lm$robust_se), header=F)
 ```
+
+As expected, the two covaraites - no cell phone and baseline average bins - are still significant and unchanged. The varaince explained by our covariates should be approximately constant when measuring similar treatment effects. This regression allows us to see the impact in minor variations to our treatmetns. We see that bins with a sticker produced about 1.3 standard errors improvement from bins without stickers. We can also see that generic messages had a smaller impact than personal messages, although both effects are still negative. The personal SMS treatment is significant at the 90% level, but since we don't have a compelling reason to believe that texts decrease recycling this is probably due to noise.
 
 \pagebreak
 
@@ -578,6 +595,8 @@ a. Without using any covariates, answer this question with regression: What is t
 lm_5a <- lm(vomiting_day14 ~ treat_zmapp, d)
 lm <- lm_5a
 lm$robust_se <- sqrt(diag(vcovHC(lm)))
+print(sprintf("The ATE of treatemnt %s is %.3f",names(lm$coefficients[2]),lm$coefficients[2]))
+print(sprintf("The p-value is %.5f",summary(lm)$coefficients[2,4]))
 ```
 
 ```{r, results='asis'}
@@ -594,6 +613,8 @@ b. Add covariates for vomiting on day 0 and patient temperature on day 0 to the 
 lm_5b <- lm(vomiting_day14 ~ treat_zmapp + vomiting_day0 + temperature_day0, d)
 lm <- lm_5b
 lm$robust_se <- sqrt(diag(vcovHC(lm)))
+print(sprintf("The ATE of treatemnt %s is %.3f",names(lm$coefficients[2]),lm$coefficients[2]))
+print(sprintf("The p-value is %.5f",summary(lm)$coefficients[2,4]))
 ```
 
 ```{r, results='asis'}
@@ -618,6 +639,8 @@ d. The regression from part (b) suggests that temperature is highly predictive o
 lm_5c <- lm(vomiting_day14 ~ treat_zmapp + vomiting_day0 + temperature_day0 + temperature_day14, d)
 lm <- lm_5c
 lm$robust_se <- sqrt(diag(vcovHC(lm)))
+print(sprintf("The ATE of treatemnt %s is %.3f",names(lm$coefficients[2]),lm$coefficients[2]))
+print(sprintf("The p-value is %.5f",summary(lm)$coefficients[2,4]))
 ```
 
 ```{r, results='asis'}
@@ -647,7 +670,7 @@ lm$robust_se <- sqrt(diag(vcovHC(lm)))
 stargazer(lm,se=list(lm$robust_se), header=F)
 ```
 
-This regression adds two covariates, a dummy variable for male and an interaction term, treatment * male. This allows us to sepeately measaure the effect of recieving the treatment, of being a male, and of being a male who recieved the treatment. 
+This regression adds two covariates, a dummy variable for male and an interaction term, treatment * male. This allows us to sepeately measaure the effect of recieving the treatment, of being a male, and of being a male who recieved the treatment. While being a male appears correlated to an increase in the 14th day tempurature of a subject by 3, being a male who recieved the treatment has his tempurature reduced by an average of 2. For an unknonwn reason, men appear to be more suseptible to ebola than women. It is likely that the treatment has improved effectiveness on males because they are sicker, which gives more room for improvement.
 
 \begin{shaded}
 
